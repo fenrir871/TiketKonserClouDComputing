@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="en" class="dark">
 <head>
+    <meta name="csrf-token" content="{{ csrf_token() }}">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Ado Special Live World Tour - Ticket Pass & Reservation</title>
@@ -735,75 +736,79 @@
             document.getElementById('summary-grand-total').textContent = `$${grandTotal.toFixed(2)}`;
         }
 
-        // Form Validation & Submission
-        function handleFormSubmit(event) {
-            event.preventDefault();
+async function handleFormSubmit(event) {
+    event.preventDefault();
 
-            const fullName = document.getElementById('fullName').value.trim();
-            const email = document.getElementById('email').value.trim();
-            const phone = document.getElementById('phone').value.trim();
+    const fullName = document.getElementById('fullName').value.trim();
+    const email = document.getElementById('email').value.trim();
+    const phone = document.getElementById('phone').value.trim();
 
-            let isValid = true;
+    let isValid = true;
+    const toggle = (id, bad) => {
+        document.getElementById(id).classList.toggle('hidden', !bad);
+        if (bad) isValid = false;
+    };
+    toggle('fullName-error', !fullName);
+    toggle('email-error', !email || !email.includes('@'));
+    toggle('phone-error', !phone);
+    if (!isValid) return;
 
-            if (!fullName) {
-                document.getElementById('fullName-error').classList.remove('hidden');
-                isValid = false;
-            } else {
-                document.getElementById('fullName-error').classList.add('hidden');
-            }
+    const addons = [];
+    if (document.getElementById('addon-lightstick').checked) addons.push('lightstick');
+    if (document.getElementById('addon-hoodie').checked) addons.push('hoodie');
+    if (document.getElementById('addon-book').checked) addons.push('book');
 
-            if (!email || !email.includes('@')) {
-                document.getElementById('email-error').classList.remove('hidden');
-                isValid = false;
-            } else {
-                document.getElementById('email-error').classList.add('hidden');
-            }
+    const btn = event.target.querySelector('button[type="submit"]');
+    const oldHtml = btn.innerHTML;
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-2"></i> Sending...';
 
-            if (!phone) {
-                document.getElementById('phone-error').classList.remove('hidden');
-                isValid = false;
-            } else {
-                document.getElementById('phone-error').classList.add('hidden');
-            }
+    try {
+        const res = await fetch("{{ route('ticket.reserve') }}", {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json',
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+            },
+            body: JSON.stringify({
+                full_name: fullName,
+                email: email,
+                phone: phone,
+                quantity: quantity,
+                show_date: document.getElementById('showDate').value,
+                tier: selectedTier,
+                addons: addons,
+                promo: document.getElementById('promoCode').value.trim()
+            })
+        });
 
-            if (isValid) {
-                populateAndShowReceipt(fullName);
-            }
-        }
+        if (!res.ok) throw new Error('Request failed');
+        const { ticket } = await res.json();
+        showReceipt(ticket);
+    } catch (err) {
+        alert('Gagal mengirim email konfirmasi. Silakan coba lagi.');
+    } finally {
+        btn.disabled = false;
+        btn.innerHTML = oldHtml;
+    }
+}
 
-        // Show Modal with Generated Ticket Details
-        function populateAndShowReceipt(name) {
-            const dateVal = document.getElementById('showDate').value;
-            const totalText = document.getElementById('summary-grand-total').textContent;
+function showReceipt(t) {
+    document.getElementById('modal-name').textContent = t.name;
+    document.getElementById('modal-pass-id').textContent = t.pass_id;
+    document.getElementById('modal-date').textContent = t.date;
+    document.getElementById('modal-tier').textContent = t.tier;
+    document.getElementById('modal-qty').textContent = `${t.quantity} Ticket(s)`;
+    document.getElementById('modal-addons').textContent = t.addons.length ? t.addons.join(', ') : 'No pre-order items';
+    document.getElementById('modal-total').textContent = `$${t.total.toFixed(2)}`;
+    document.getElementById('receipt-modal').classList.remove('hidden');
+}
 
-            // Compile Addons text
-            let addons = [];
-            if (document.getElementById('addon-lightstick').checked) addons.push('Blue Rose Lightstick');
-            if (document.getElementById('addon-hoodie').checked) addons.push('Tour Hoodie');
-            if (document.getElementById('addon-book').checked) addons.push('Art Photobook');
-
-            const addonsStr = addons.length > 0 ? addons.join(', ') : 'No pre-order items';
-
-            // Random Pass ID
-            const randomId = 'ADO-' + Math.floor(1000 + Math.random() * 9000) + '-2026';
-
-            // Populate Modal Fields
-            document.getElementById('modal-name').textContent = name;
-            document.getElementById('modal-pass-id').textContent = randomId;
-            document.getElementById('modal-date').textContent = dateVal;
-            document.getElementById('modal-tier').textContent = selectedTier + ' Tier';
-            document.getElementById('modal-qty').textContent = `${quantity} Ticket(s)`;
-            document.getElementById('modal-addons').textContent = addonsStr;
-            document.getElementById('modal-total').textContent = totalText;
-
-            // Display Modal
-            document.getElementById('receipt-modal').classList.remove('hidden');
-        }
-
-        function closeModal() {
-            document.getElementById('receipt-modal').classList.add('hidden');
-        }
-
+function closeModal() {
+    document.getElementById('receipt-modal').classList.add('hidden');
+}
+       
         // Mock Download Pass action
         function downloadPass() {
             const passText = `Ado Concert Digital Ticket Pass\nPass ID: ${document.getElementById('modal-pass-id').textContent}\nAttendee: ${document.getElementById('modal-name').textContent}\nDate: ${document.getElementById('modal-date').textContent}`;
