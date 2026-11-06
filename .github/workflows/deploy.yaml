@@ -73,16 +73,7 @@ jobs:
         npm ci
         npm run build
 
-    # Optional: Push compiled production assets back to Git if your deployment relies on Git integration
-    - name: Commit Built Assets (If required by your hosting Git sync)
-      run: |
-        git config --global user.name "github-actions[bot]"
-        git config --global user.email "github-actions[bot]@://github.com"
-        git add public/build -f
-        git diff-index --quiet HEAD || git commit -m "chore: build production assets [skip ci]"
-        git push origin main
-      env:
-        GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
+
 
   deploy:
     name: Deploy to Live Hosting
