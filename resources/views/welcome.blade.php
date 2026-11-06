@@ -4,7 +4,7 @@
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Ado Special Live World Tour - Ticket Pass & Reservation</title>
+    <title>AdoH Special Live World Tour - Ticket Pass & Reservation</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Font Awesome Icons -->
