@@ -82,7 +82,7 @@ jobs:
         git diff-index --quiet HEAD || git commit -m "chore: build production assets [skip ci]"
         git push origin main
       env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
 
   deploy:
     name: Deploy to Live Hosting
@@ -124,7 +124,7 @@ jobs:
         password: ${{ secrets.SSH_PASSWORD }}
         port: 22
         source: "vendor.tar.gz"
-        target: "/home/hgalih-arielnoah/htdocs/arielnoah.hgalih.my.id"
+        target: "/home/gambitneverfold-ticketbb/htdocs/ticketbb.gambitneverfold.web.id"
 
     - name: Deploy via SSH
       uses: appleboy/ssh-action@v1.2.5
@@ -134,7 +134,7 @@ jobs:
         password: ${{ secrets.SSH_PASSWORD }}
         port: 22
         script: |
-          cd /home/hgalih-arielnoah/htdocs/arielnoah.hgalih.my.id
+          cd /home/gambitneverfold-ticketbb/htdocs/ticketbb.gambitneverfold.web.id
           git pull origin main
           rm -rf vendor
           tar -xzf vendor.tar.gz
