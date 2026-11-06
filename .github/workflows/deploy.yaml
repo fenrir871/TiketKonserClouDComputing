@@ -2,7 +2,10 @@ name: Laravel 13 CI/CD Deployment
 
 on:
   push:
-    branches: [ "main" ] # Triggers only when code is pushed to your main production branch
+    branches: ["main"]
+
+permissions:
+  contents: write
 
 jobs:
   laravel-tests:
