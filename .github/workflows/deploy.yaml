@@ -125,10 +125,20 @@ jobs:
         password: ${{ secrets.SSH_PASSWORD }}
         port: 22
         script: |
+          set -e
+
           cd /home/gambitneverfold-ticketbb/htdocs/ticketbb.gambitneverfold.web.id
+
+          git config --global --add safe.directory /home/gambitneverfold-ticketbb/htdocs/ticketbb.gambitneverfold.web.id
           git pull origin main
+
           rm -rf vendor
           tar -xzf vendor.tar.gz
           rm -f vendor.tar.gz
+
+          rm -f bootstrap/cache/packages.php
+          rm -f bootstrap/cache/services.php
+
+          php artisan optimize:clear
           php artisan migrate --force
           php artisan config:cache
